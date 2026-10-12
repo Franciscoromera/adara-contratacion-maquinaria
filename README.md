@@ -105,6 +105,41 @@ Carga enviada al webhook:
 6. **Entorno**: todas las variables anteriores.
 7. **Desplegar**.
 
+## Despliegue permanente en el VPS (Docker Swarm + Traefik de EasyPanel)
+
+El servicio ya está desplegado y funcionando con el script `desplegar_vps.sh`, que se ejecuta
+desde el propio VPS:
+
+```bash
+ssh root@72.62.29.60 'bash -s' < desplegar_vps.sh
+```
+
+Qué hace el script, paso a paso:
+
+1. Clona o actualiza el repositorio en `/opt/contrato-firma/repo`.
+2. Crea `/opt/contrato-firma/.env` con los secretos generados al azar (solo la primera vez, no
+   sobrescribe lo que ya exista).
+3. Construye la imagen `contrato-firma:1.0`.
+4. Crea el volumen `contrato-firma-data` (ahí viven los contratos) y el servicio Swarm
+   `contrato-firma`, conectado a la red overlay `easypanel` que comparte con Traefik.
+5. Escribe el enrutado en `/etc/easypanel/traefik/config/contrato-firma.yaml`, que Traefik carga
+   automáticamente. Es el mismo mecanismo que usa EasyPanel, pero en un archivo propio para que
+   EasyPanel no lo sobrescriba al guardar cambios de sus servicios.
+
+Para publicar cualquier cambio del código basta con volver a lanzar el mismo script.
+
+Comandos útiles en el VPS:
+
+```bash
+docker service ls                                                   # estado
+docker service logs -f contrato-firma                               # registro en vivo
+docker service ps contrato-firma                                    # tareas y reinicios
+nano /opt/contrato-firma/.env                                       # configuración
+docker service update --force --env-file /opt/contrato-firma/.env contrato-firma
+```
+
+Las claves generadas quedan además en `/root/.contrato-firma-claves`.
+
 ## Ejecución local con Docker
 
 ```bash
