@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Contrato aceptado · {{ cfg.empresa }}</title>
+<style>
+  body { margin:0; background:#f4f6f8; color:#16202a;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.55; }
+  header { background:#1b4d7a; color:#fff; padding:28px 18px; }
+  .contenedor { max-width:760px; margin:0 auto; padding:0 18px; }
+  header h1 { margin:0; font-size:1.34rem; }
+  main { background:#fff; border:1px solid #cfd8e0; border-radius:10px; margin:-16px auto 40px;
+         max-width:760px; padding:26px 22px; }
+  h2 { color:#1b4d7a; font-size:1.06rem; margin:22px 0 10px; }
+  h2:first-child { margin-top:0; }
+  .ok { background:#eaf6ef; border:1px solid #b6ddc6; color:#1e6b3a; padding:12px 14px; border-radius:8px; font-size:.92rem; }
+  .ojo { background:#fdf6e3; border:1px solid #e8d9a8; color:#7a5a12; padding:12px 14px; border-radius:8px; font-size:.92rem; }
+  ol { padding-left:20px; }
+  li { margin-bottom:8px; }
+  .botones { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0 6px; }
+  a.boton { display:inline-block; background:#1b4d7a; color:#fff; text-decoration:none; font-weight:600;
+            padding:12px 16px; border-radius:8px; font-size:.94rem; }
+  a.boton.sec { background:#fff; color:#1b4d7a; border:1.5px solid #1b4d7a; }
+  table.datos { border-collapse:collapse; width:100%; font-size:.88rem; margin-top:10px; }
+  table.datos th, table.datos td { border:1px solid #cfd8e0; padding:7px 9px; text-align:left; }
+  table.datos th { background:#eef3f8; width:42%; }
+  .pie { text-align:center; font-size:.78rem; color:#5a6672; padding:0 18px 30px; }
+</style>
+</head>
+<body>
+<header><div class="contenedor"><h1>Contrato aceptado correctamente</h1></div></header>
+<main>
+  <p class="ok">Hemos registrado tu aceptación del contrato de arrendamiento de maquinaria y hemos generado
+  tu ejemplar personalizado.</p>
+
+  {% if email_ok %}
+  <p>Te hemos enviado el contrato en PDF a <strong>{{ solicitud.email }}</strong>.
+  Revisa también la carpeta de spam si no lo ves en unos minutos.</p>
+  {% else %}
+  <p class="ojo">No hemos podido enviar el correo automáticamente{% if email_error %} ({{ email_error }}){% endif %}.
+  Puedes descargar el contrato con el botón de abajo y enviárnoslo igualmente.</p>
+  {% endif %}
+
+  <h2>Qué hacer ahora</h2>
+  <ol>
+    <li>Descarga el contrato (o ábrelo desde el correo).</li>
+    <li>Imprímelo y fírmalo.</li>
+    <li>Devuélvenoslo firmado: respondiendo al correo, o subiéndolo desde el botón de abajo.</li>
+  </ol>
+
+  <div class="botones">
+    <a class="boton" href="/contrato/{{ solicitud.id }}.pdf?t={{ t }}" target="_blank" rel="noopener">
+      Descargar el contrato en PDF
+    </a>
+    <a class="boton sec" href="/firmado/{{ solicitud.id }}?t={{ t }}">
+      Subir el contrato firmado
+    </a>
+  </div>
+
+  <h2>Datos del expediente</h2>
+  <table class="datos">
+    <tr><th>Nº de contrato</th><td>{{ solicitud.numero_contrato }}</td></tr>
+    <tr><th>Arrendatario</th><td>{{ solicitud.empresa }}</td></tr>
+    <tr><th>Fecha y hora de aceptación</th><td>{{ solicitud.creado }}</td></tr>
+    <tr><th>Versión del contrato aceptada</th><td>{{ solicitud.version_contrato }}</td></tr>
+    <tr><th>Huella del documento (SHA-256)</th><td style="word-break:break-all">{{ solicitud.pdf_sha256 }}</td></tr>
+  </table>
+
+  <p style="font-size:.85rem;color:#5a6672;margin-top:16px">
+    Guarda este enlace por si necesitas volver a descargar el contrato. Si tienes cualquier duda,
+    escríbenos{% if cfg.email_contacto %} a {{ cfg.email_contacto }}{% endif %}{% if cfg.telefono_contacto %}
+    o llámanos al {{ cfg.telefono_contacto }}{% endif %}.
+  </p>
+</main>
+<div class="pie">{{ cfg.empresa }}</div>
+</body>
+</html>

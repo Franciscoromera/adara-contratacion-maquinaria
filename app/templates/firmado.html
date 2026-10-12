@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Subir el contrato firmado · {{ cfg.empresa }}</title>
+<style>
+  body { margin:0; background:#f4f6f8; color:#16202a;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.55; }
+  header { background:#1b4d7a; color:#fff; padding:26px 18px; }
+  .contenedor { max-width:700px; margin:0 auto; padding:0 18px; }
+  header h1 { margin:0; font-size:1.28rem; }
+  main { background:#fff; border:1px solid #cfd8e0; border-radius:10px; margin:-16px auto 40px;
+         max-width:700px; padding:24px 22px; }
+  .ok { background:#eaf6ef; border:1px solid #b6ddc6; color:#1e6b3a; padding:12px 14px; border-radius:8px; }
+  .error { background:#fdecea; border:1px solid #e6b0aa; color:#922b21; padding:12px 14px; border-radius:8px; }
+  label { display:block; font-weight:600; font-size:.85rem; color:#5a6672; margin:16px 0 6px; }
+  input[type=file] { width:100%; padding:12px; border:1.5px dashed #1b4d7a; border-radius:8px; background:#f8fbfd; }
+  button { margin-top:18px; width:100%; background:#1b4d7a; color:#fff; border:0; padding:13px;
+           font-size:.98rem; font-weight:600; border-radius:8px; cursor:pointer; }
+  .ayuda { font-size:.8rem; color:#7b8794; margin-top:6px; }
+  a { color:#1b4d7a; }
+</style>
+</head>
+<body>
+<header><div class="contenedor"><h1>Contrato firmado</h1></div></header>
+<main>
+  {% if hecho %}
+    <p class="ok">Gracias. Hemos recibido tu contrato firmado y queda incorporado a tu expediente
+    (nº {{ solicitud.numero_contrato }}).</p>
+    <p>Si necesitas enviarnos algo más, respóndenos al correo del contrato{% if cfg.email_contacto %}
+    o escríbenos a {{ cfg.email_contacto }}{% endif %}.</p>
+  {% else %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <p>Sube aquí el contrato <strong>firmado y, si procede, sellado</strong>, correspondiente al
+    expediente nº <strong>{{ solicitud.numero_contrato }}</strong> ({{ solicitud.empresa }}).</p>
+    <form method="post" action="/firmado/{{ solicitud.id }}" enctype="multipart/form-data">
+      <input type="hidden" name="t" value="{{ t }}">
+      <label>Archivo del contrato firmado</label>
+      <input type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,.doc,.docx" required>
+      <div class="ayuda">Puedes subir un PDF escaneado o fotos del contrato firmado (máximo 15 MB).</div>
+      <button type="submit">Enviar el contrato firmado</button>
+    </form>
+    <p class="ayuda" style="margin-top:14px">También puedes responder al correo del contrato adjuntando
+    el archivo firmado. ¿Necesitas el contrato de nuevo?
+    <a href="/contrato/{{ solicitud.id }}.pdf?t={{ t }}" target="_blank" rel="noopener">Descárgalo aquí</a>.</p>
+  {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+services:
+  contrato-firma:
+    build: .
+    image: contrato-firma:1.0
+    container_name: contrato-firma
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    volumes:
+      - contrato-firma-data:/data
+    env_file:
+      - .env
+
+volumes:
+  contrato-firma-data:

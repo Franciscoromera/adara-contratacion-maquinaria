@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Contrato de arrendamiento de maquinaria · {{ cfg.empresa }}</title>
+<style>
+  :root { --azul:#1b4d7a; --azul-claro:#eef3f8; --gris:#5a6672; --borde:#cfd8e0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#f4f6f8; color:#16202a;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.5; }
+  header { background:var(--azul); color:#fff; padding:26px 18px 22px; }
+  .contenedor { max-width:900px; margin:0 auto; padding:0 18px; }
+  header h1 { margin:0 0 6px; font-size:1.42rem; line-height:1.3; }
+  header p { margin:0; opacity:.9; font-size:.94rem; }
+  .etiquetas { margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; }
+  .etiquetas span { background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35);
+                    border-radius:999px; padding:3px 11px; font-size:.78rem; }
+  main { background:#fff; border:1px solid var(--borde); border-radius:10px; margin:-14px auto 40px;
+         max-width:900px; padding:24px 22px 30px; position:relative; }
+  h2.seccion { font-size:1.02rem; color:var(--azul); border-bottom:1px solid var(--borde);
+               padding-bottom:6px; margin:26px 0 14px; }
+  h2.seccion:first-of-type { margin-top:6px; }
+  .rejilla { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px 14px; }
+  label { display:block; font-size:.82rem; font-weight:600; color:var(--gris); margin-bottom:4px; }
+  label .req { color:#c0392b; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=time],
+  input[type=number], select, textarea {
+    width:100%; padding:9px 10px; border:1px solid var(--borde); border-radius:6px;
+    font-size:.92rem; font-family:inherit; background:#fff; color:#16202a; }
+  textarea { min-height:70px; resize:vertical; }
+  .ancho { grid-column:1/-1; }
+  .ayuda { font-size:.76rem; color:#7b8794; margin-top:3px; }
+  .bloque-aceptacion { margin-top:26px; border:1.5px solid var(--azul); border-radius:8px;
+                       background:var(--azul-claro); padding:16px 16px 14px; }
+  .bloque-aceptacion label.casilla { display:flex; gap:10px; align-items:flex-start; font-size:.9rem;
+                       font-weight:400; color:#16202a; margin:0 0 12px; }
+  .bloque-aceptacion input[type=checkbox] { margin-top:3px; width:18px; height:18px; flex:none; }
+  .bloque-aceptacion a { color:var(--azul); font-weight:600; }
+  button.enviar { margin-top:22px; width:100%; background:var(--azul); color:#fff; border:0;
+                  padding:14px 18px; font-size:1rem; font-weight:600; border-radius:8px; cursor:pointer; }
+  button.enviar:hover { background:#153f64; }
+  .error { background:#fdecea; border:1px solid #e6b0aa; color:#922b21; padding:12px 14px;
+           border-radius:8px; margin-bottom:18px; font-size:.9rem; }
+  .aviso { font-size:.78rem; color:var(--gris); margin-top:14px; }
+  details.notas { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:12px 14px; margin-top:16px; }
+  details.notas summary { cursor:pointer; font-weight:600; font-size:.9rem; color:var(--azul); }
+  .pie { text-align:center; font-size:.78rem; color:var(--gris); padding:0 18px 30px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="contenedor">
+    <h1>Contrato de arrendamiento de maquinaria y vehículos de obra pública</h1>
+    <p>Rellena tus datos y acepta el contrato: lo recibirás por correo, ya cumplimentado, para imprimirlo y firmarlo.</p>
+    <div class="etiquetas">
+      <span>Sin operador</span><span>Sin combustible</span>
+      <span>Máquina en condiciones de trabajo</span><span>Versión {{ version }}</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <p style="font-size:.9rem;color:#5a6672;margin-top:0">
+    Al enviar este formulario se genera tu contrato personalizado, se registra la aceptación con fecha, hora y
+    versión del documento, y recibes el PDF en tu correo. Después solo tienes que firmarlo y devolvérnoslo.
+  </p>
+
+  <form method="post" action="/solicitar" novalidate>
+    <h2 class="seccion">1. Datos del arrendatario (cliente)</h2>
+    <div class="rejilla">
+      <div class="ancho">
+        <label>Razón social o nombre completo <span class="req">*</span></label>
+        <input type="text" name="arr_razon" value="{{ datos.get('arr_razon','') }}" required>
+      </div>
+      <div>
+        <label>Forma jurídica</label>
+        <select name="arr_tipo">
+          {% for op in ['S.L.','S.A.','S.L.U.','Sociedad limitada nueva empresa','Comunidad de bienes','Trabajador autónomo','Particular'] %}
+          <option value="{{ op }}" {{ 'selected' if datos.get('arr_tipo')==op else '' }}>{{ op }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>CIF / NIF <span class="req">*</span></label>
+        <input type="text" name="arr_cif" value="{{ datos.get('arr_cif','') }}" required>
+      </div>
+      <div class="ancho">
+        <label>Domicilio social o fiscal</label>
+        <input type="text" name="arr_domicilio" value="{{ datos.get('arr_domicilio','') }}">
+      </div>
+      <div>
+        <label>Persona que firma <span class="req">*</span></label>
+        <input type="text" name="arr_representante" value="{{ datos.get('arr_representante','') }}" required>
+      </div>
+      <div>
+        <label>DNI/NIE del firmante</label>
+        <input type="text" name="arr_dni" value="{{ datos.get('arr_dni','') }}">
+      </div>
+      <div>
+        <label>Cargo o condición</label>
+        <input type="text" name="arr_cargo" value="{{ datos.get('arr_cargo','') }}" placeholder="Administrador, encargado…">
+      </div>
+      <div>
+        <label>Teléfono móvil</label>
+        <input type="tel" name="arr_telefono" value="{{ datos.get('arr_telefono','') }}">
+      </div>
+      <div class="ancho">
+        <label>Correo electrónico <span class="req">*</span></label>
+        <input type="email" name="arr_email" value="{{ datos.get('arr_email','') }}" required>
+        <div class="ayuda">Aquí recibirás el contrato en PDF.</div>
+      </div>
+    </div>
+
+    <h2 class="seccion">2. Obra o emplazamiento</h2>
+    <div class="rejilla">
+      <div class="ancho">
+        <label>Dirección de la obra o lugar de uso <span class="req">*</span></label>
+        <input type="text" name="obra_direccion" value="{{ datos.get('obra_direccion','') }}" required>
+      </div>
+      <div>
+        <label>Término municipal</label>
+        <input type="text" name="obra_municipio" value="{{ datos.get('obra_municipio','') }}" placeholder="Roquetas de Mar, Almería…">
+      </div>
+      <div>
+        <label>Referencia catastral o coordenadas</label>
+        <input type="text" name="obra_ref" value="{{ datos.get('obra_ref','') }}">
+      </div>
+      <div class="ancho">
+        <label>Uso previsto de la máquina <span class="req">*</span></label>
+        <textarea name="obra_uso" required placeholder="Trabajos a realizar, tipo de terreno, condiciones…">{{ datos.get('obra_uso','') }}</textarea>
+      </div>
+    </div>
+
+    <h2 class="seccion">3. Máquina o máquinas</h2>
+    {% for n in [1,2] %}
+    <div class="rejilla" style="margin-bottom:12px">
+      <div class="ancho"><strong style="font-size:.85rem;color:#1b4d7a">Máquina {{ n }}{% if n == 1 %} <span class="req">*</span>{% endif %}</strong></div>
+      <div>
+        <label>Descripción y tipo</label>
+        <input type="text" name="maq{{ n }}_desc" value="{{ datos.get('maq%d_desc'|format(n),'') }}"
+               {{ 'required' if n == 1 else '' }} placeholder="Miniexcavadora, retrocargadora, dumper…">
+      </div>
+      <div>
+        <label>Marca / modelo</label>
+        <input type="text" name="maq{{ n }}_marca" value="{{ datos.get('maq%d_marca'|format(n),'') }}">
+      </div>
+      <div>
+        <label>Nº de serie o matrícula</label>
+        <input type="text" name="maq{{ n }}_serie" value="{{ datos.get('maq%d_serie'|format(n),'') }}">
+      </div>
+      <div>
+        <label>Accesorios</label>
+        <input type="text" name="maq{{ n }}_accesorios" value="{{ datos.get('maq%d_accesorios'|format(n),'') }}"
+               placeholder="Cazo, martillo, pinza…">
+      </div>
+    </div>
+    {% endfor %}
+    <div class="rejilla">
+      <div class="ancho">
+        <label>Observaciones sobre las máquinas</label>
+        <textarea name="maq_observaciones">{{ datos.get('maq_observaciones','') }}</textarea>
+      </div>
+    </div>
+
+    <h2 class="seccion">4. Duración</h2>
+    <div class="rejilla">
+      <div>
+        <label>Fecha de entrega <span class="req">*</span></label>
+        <input type="date" name="fecha_inicio" value="{{ datos.get('fecha_inicio','') }}" required>
+      </div>
+      <div>
+        <label>Hora de entrega</label>
+        <input type="time" name="hora_inicio" value="{{ datos.get('hora_inicio','') }}">
+      </div>
+      <div>
+        <label>Fecha de devolución prevista <span class="req">*</span></label>
+        <input type="date" name="fecha_fin" value="{{ datos.get('fecha_fin','') }}" required>
+      </div>
+      <div>
+        <label>Preaviso de devolución (días)</label>
+        <input type="text" name="preaviso_dias" value="{{ datos.get('preaviso_dias','') }}" placeholder="7">
+      </div>
+      <div>
+        <label>Prórroga</label>
+        <select name="prorroga">
+          <option value="" {{ 'selected' if not datos.get('prorroga') else '' }}>— sin especificar —</option>
+          <option value="automatica" {{ 'selected' if datos.get('prorroga')=='automatica' else '' }}>Automática por períodos</option>
+          <option value="expresa" {{ 'selected' if datos.get('prorroga')=='expresa' else '' }}>Expresa por escrito</option>
+        </select>
+      </div>
+      <div>
+        <label>Período de prórroga</label>
+        <input type="text" name="prorroga_periodo" value="{{ datos.get('prorroga_periodo','') }}" placeholder="= 5 días / 1 mes">
+      </div>
+    </div>
+
+    <details class="notas" {{ 'open' if datos.get('precio_dia') or error else '' }}>
+      <summary>5. Condiciones económicas (puedes dejarlo en blanco: lo completamos nosotros y te lo reenviamos)</summary>
+      <div class="rejilla" style="margin-top:14px">
+        <div><label>Precio por día laborable (8 h)</label><input type="text" name="precio_dia" value="{{ datos.get('precio_dia','') }}"></div>
+        <div><label>Precio por semana (40 h)</label><input type="text" name="precio_semana" value="{{ datos.get('precio_semana','') }}"></div>
+        <div><label>Precio por mes (168 h)</label><input type="text" name="precio_mes" value="{{ datos.get('precio_mes','') }}"></div>
+        <div><label>Hora adicional</label><input type="text" name="precio_hora" value="{{ datos.get('precio_hora','') }}"></div>
+        <div><label>Duración mínima de facturación</label><input type="text" name="minimo_facturacion" value="{{ datos.get('minimo_facturacion','') }}"></div>
+        <div><label>Transporte ida</label><input type="text" name="transporte_ida" value="{{ datos.get('transporte_ida','') }}"></div>
+        <div><label>Transporte vuelta</label><input type="text" name="transporte_vuelta" value="{{ datos.get('transporte_vuelta','') }}"></div>
+        <div><label>Revisión de precios</label><input type="text" name="revision_precios" value="{{ datos.get('revision_precios','') }}"></div>
+        <div><label>Otros conceptos</label><input type="text" name="otros_conceptos" value="{{ datos.get('otros_conceptos','') }}"></div>
+        <div><label>Referencia del presupuesto o tarifa aceptada</label><input type="text" name="presupuesto_ref" value="{{ datos.get('presupuesto_ref','') }}"></div>
+        <div><label>Plazo de pago (días naturales)</label><input type="text" name="plazo_pago" value="{{ datos.get('plazo_pago','') }}" placeholder="30"></div>
+        <div><label>IBAN para el pago</label><input type="text" name="iban" value="{{ datos.get('iban','') }}"></div>
+        <div><label>Fianza o garantía (€)</label><input type="text" name="fianza" value="{{ datos.get('fianza','') }}"></div>
+        <div>
+          <label>Modalidad de la fianza</label>
+          <select name="fianza_modalidad">
+            <option value="">— sin especificar —</option>
+            <option value="efectivo metálico" {{ 'selected' if datos.get('fianza_modalidad')=='efectivo metálico' else '' }}>Efectivo metálico</option>
+            <option value="transferencia" {{ 'selected' if datos.get('fianza_modalidad')=='transferencia' else '' }}>Transferencia</option>
+            <option value="aval bancario" {{ 'selected' if datos.get('fianza_modalidad')=='aval bancario' else '' }}>Aval bancario</option>
+            <option value="póliza de caución" {{ 'selected' if datos.get('fianza_modalidad')=='póliza de caución' else '' }}>Póliza de caución</option>
+          </select>
+        </div>
+        <div><label>Tipo de interés de demora pactado</label><input type="text" name="interes_demora" value="{{ datos.get('interes_demora','') }}"></div>
+        <div>
+          <label>Periodicidad de facturación</label>
+          <select name="facturacion">
+            <option value="">— sin especificar —</option>
+            <option value="mensual" {{ 'selected' if datos.get('facturacion')=='mensual' else '' }}>Mensual</option>
+            <option value="final" {{ 'selected' if datos.get('facturacion')=='final' else '' }}>Al final del arrendamiento</option>
+            <option value="otra" {{ 'selected' if datos.get('facturacion')=='otra' else '' }}>Otra</option>
+          </select>
+        </div>
+        <div><label>Otra periodicidad</label><input type="text" name="facturacion_otra" value="{{ datos.get('facturacion_otra','') }}"></div>
+      </div>
+    </details>
+
+    <details class="notas" {{ 'open' if datos.get('rc_poliza') or error else '' }}>
+      <summary>6. Seguros (opcional)</summary>
+      <div class="rejilla" style="margin-top:14px">
+        <div><label>RC de explotación: entidad</label><input type="text" name="rc_entidad" value="{{ datos.get('rc_entidad','') }}"></div>
+        <div><label>Nº de póliza</label><input type="text" name="rc_poliza" value="{{ datos.get('rc_poliza','') }}"></div>
+        <div><label>Cobertura (€)</label><input type="text" name="rc_cobertura" value="{{ datos.get('rc_cobertura','') }}"></div>
+        <div>
+          <label>Seguro de daños propios de la máquina</label>
+          <select name="seguro_danos">
+            <option value="">— sin especificar —</option>
+            <option value="arrendador" {{ 'selected' if datos.get('seguro_danos')=='arrendador' else '' }}>Contratado por el arrendador</option>
+            <option value="no" {{ 'selected' if datos.get('seguro_danos')=='no' else '' }}>No contratado</option>
+          </select>
+        </div>
+        <div><label>Prima repercutida (%)</label><input type="text" name="prima_pct" value="{{ datos.get('prima_pct','') }}"></div>
+        <div><label>Franquicia a tu cargo (%)</label><input type="text" name="franquicia_pct" value="{{ datos.get('franquicia_pct','') }}"></div>
+        <div><label>Franquicia mínima (€)</label><input type="text" name="franquicia_min" value="{{ datos.get('franquicia_min','') }}"></div>
+        <div><label>Póliza de circulación (equipos matriculados)</label><input type="text" name="poliza_circulacion" value="{{ datos.get('poliza_circulacion','') }}"></div>
+        <div><label>Vencimiento de la póliza</label><input type="date" name="vencimiento_circulacion" value="{{ datos.get('vencimiento_circulacion','') }}"></div>
+      </div>
+    </details>
+
+    <details class="notas" {{ 'open' if datos.get('personas_autorizadas') else '' }}>
+      <summary>7. Obligaciones accesorias y observaciones (opcional)</summary>
+      <div class="rejilla" style="margin-top:14px">
+        <div class="ancho"><label>Personas autorizadas para usar la máquina</label><input type="text" name="personas_autorizadas" value="{{ datos.get('personas_autorizadas','') }}"></div>
+        <div>
+          <label>Parte de horas</label>
+          <select name="parte_horas">
+            <option value="">— sin especificar —</option>
+            <option value="semanal" {{ 'selected' if datos.get('parte_horas')=='semanal' else '' }}>Semanal</option>
+            <option value="mensual" {{ 'selected' if datos.get('parte_horas')=='mensual' else '' }}>Mensual</option>
+            <option value="otro" {{ 'selected' if datos.get('parte_horas')=='otro' else '' }}>Otro</option>
+          </select>
+        </div>
+        <div><label>Otro parte de horas</label><input type="text" name="parte_horas_otro" value="{{ datos.get('parte_horas_otro','') }}"></div>
+        <div><label>Gastos de gestión de residuos</label><input type="text" name="residuos" value="{{ datos.get('residuos','') }}"></div>
+        <div><label>Régimen de acceso e inspección</label><input type="text" name="acceso_inspeccion" value="{{ datos.get('acceso_inspeccion','') }}"></div>
+        <div class="ancho"><label>Observaciones para el Anexo II</label><textarea name="anexo2_observaciones">{{ datos.get('anexo2_observaciones','') }}</textarea></div>
+      </div>
+    </details>
+
+    <h2 class="seccion">8. Aceptación del contrato</h2>
+    <div class="rejilla">
+      <div>
+        <label>Nombre de quien acepta y firma <span class="req">*</span></label>
+        <input type="text" name="firma_nombre" value="{{ datos.get('firma_nombre','') }}" required>
+      </div>
+      <div>
+        <label>Cargo</label>
+        <input type="text" name="firma_cargo" value="{{ datos.get('firma_cargo','') }}">
+      </div>
+    </div>
+
+    <div class="bloque-aceptacion">
+      <label class="casilla">
+        <input type="checkbox" name="acepta" value="si" {{ 'checked' if datos.get('acepta')=='si' else '' }}>
+        <span>He leído y <strong>acepto el contrato de arrendamiento de maquinaria</strong>
+        (condiciones generales, condiciones particulares y anexos, con el régimen de responsabilidad por uso
+        indebido, abusos e impagos). Puedes consultarlo completo aquí:
+        <a href="{{ cfg.contrato_url }}" target="_blank" rel="noopener noreferrer">ver el contrato</a>.
+        Declaro tener capacidad para contratar en nombre de la empresa indicada. <span class="req">*</span></span>
+      </label>
+      <label class="casilla">
+        <input type="checkbox" name="acepta_datos" value="si" {{ 'checked' if datos.get('acepta_datos')=='si' else '' }}>
+        <span>Consiento el tratamiento de mis datos para la formalización y gestión de este contrato,
+        conforme a la política de privacidad de {{ cfg.empresa }}. <span class="req">*</span></span>
+      </label>
+      <label class="casilla">
+        <input type="checkbox" name="acepta_whatsapp" value="si" {{ 'checked' if datos.get('acepta_whatsapp')=='si' else '' }}>
+        <span>Quiero recibir también el aviso por WhatsApp en el teléfono indicado (opcional).</span>
+      </label>
+    </div>
+
+    <button class="enviar" type="submit">Aceptar el contrato y recibirlo por email</button>
+    <div class="aviso">
+      Al enviar, se registrará la fecha y hora de la aceptación, tu dirección IP y la versión exacta del
+      contrato ({{ version }}), y recibirás el PDF en <strong>el correo que indiques arriba</strong>.
+      El contrato se formaliza con la firma del ejemplar, que puedes devolvernos por correo o subir desde
+      el enlace que incluimos.
+    </div>
+  </form>
+</main>
+
+<div class="pie">{{ cfg.empresa }}{% if cfg.telefono_contacto %} · {{ cfg.telefono_contacto }}{% endif %}</div>
+</body>
+</html>

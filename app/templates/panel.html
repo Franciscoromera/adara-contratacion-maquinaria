@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel de contratos · {{ cfg.empresa }}</title>
+<style>
+  body { margin:0; background:#f4f6f8; color:#16202a;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.5; }
+  header { background:#1b4d7a; color:#fff; padding:20px 18px; }
+  .contenedor { max-width:1080px; margin:0 auto; padding:0 18px; }
+  header h1 { margin:0; font-size:1.16rem; }
+  main { background:#fff; border:1px solid #cfd8e0; border-radius:10px; margin:18px auto 40px;
+         max-width:1080px; padding:20px 18px 26px; }
+  table { border-collapse:collapse; width:100%; font-size:.86rem; }
+  th, td { border-bottom:1px solid #e3e8ec; padding:9px 8px; text-align:left; vertical-align:top; }
+  th { background:#eef3f8; color:#1b4d7a; font-size:.8rem; text-transform:uppercase; letter-spacing:.4px; }
+  tr:hover td { background:#fafcfd; }
+  a { color:#1b4d7a; font-weight:600; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .estado { display:inline-block; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .estado.aceptado { background:#eef3f8; color:#1b4d7a; }
+  .estado.firmado_recibido { background:#eaf6ef; color:#1e6b3a; }
+  .estado.cerrado { background:#f1f1f1; color:#555; }
+  .mal { color:#922b21; font-size:.78rem; display:block; }
+  form.estado-form { display:flex; gap:6px; align-items:center; margin-top:6px; }
+  select, input[type=text] { padding:5px 7px; border:1px solid #cfd8e0; border-radius:6px; font-size:.8rem; }
+  button { background:#1b4d7a; color:#fff; border:0; padding:6px 11px; border-radius:6px;
+           font-size:.8rem; font-weight:600; cursor:pointer; }
+  .vacio { text-align:center; color:#7b8794; padding:34px 0; font-size:.92rem; }
+  .barra { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+  .barra .total { font-size:.86rem; color:#5a6672; }
+</style>
+</head>
+<body>
+<header><div class="contenedor"><h1>Panel de contratos de arrendamiento</h1></div></header>
+<main>
+  <div class="barra">
+    <div class="total">{{ solicitudes|length }} solicitud(es) registrada(s)</div>
+    <a href="/">Ver el formulario público</a>
+  </div>
+
+  {% if not solicitudes %}
+    <div class="vacio">Todavía no hay contratos aceptados.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Nº contrato</th><th>Fecha</th><th>Arrendatario</th><th>Email</th>
+        <th>Estado</th><th>Documentos</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in solicitudes %}
+      <tr>
+        <td><strong>{{ s.numero_contrato }}</strong><br><span style="color:#7b8794;font-size:.76rem">{{ s.version_contrato }}</span></td>
+        <td>{{ s.creado }}</td>
+        <td>{{ s.empresa or '—' }}</td>
+        <td>{{ s.email or '—' }}
+          {% if not s.email_enviado %}<span class="mal">correo no enviado{% if s.email_error %}: {{ s.email_error }}{% endif %}</span>{% endif %}
+        </td>
+        <td><span class="estado {{ s.estado }}">{{ s.estado.replace('_',' ') }}</span></td>
+        <td>
+          <a href="/contrato/{{ s.id }}.pdf?t={{ token(s.id) }}" target="_blank" rel="noopener">Contrato PDF</a>
+          {% if s.firmado_archivo %}<br><a href="/panel/firmado/{{ s.id }}">Ejemplar firmado</a>{% endif %}
+        </td>
+        <td>
+          <form class="estado-form" method="post" action="/panel/estado/{{ s.id }}">
+            <select name="estado">
+              {% for e in ['aceptado','firmado_recibido','cerrado','anulado'] %}
+              <option value="{{ e }}" {{ 'selected' if s.estado==e else '' }}>{{ e.replace('_',' ') }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Guardar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</main>
+</body>
+</html>
