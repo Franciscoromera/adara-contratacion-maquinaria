@@ -1,0 +1,318 @@
+{
+  "name": "Contrato aceptado - aviso WhatsApp y envio por email",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Contrato aceptado: aviso al cliente\n\nEste flujo se dispara cuando un cliente acepta el contrato en la web https://firmar.infoadaraexcavaciones.es\n\n### Antes de activarlo:\n1. **Nodo «Enviar el contrato por email»**: elige o crea la credencial SMTP y pon tu dirección de envío.\n2. **Instancia de Evolution**: el flujo usa `Respuesta_Whatsapp_34643175166`. Si quieres otro número, cámbialo en la URL de los nodos de WhatsApp.\n3. **Comprueba la instancia**: en Evolution, la 34643175166 está conectada; la 34622797949 aparece desconectada.\n4. Activa el flujo con el interruptor de arriba.\n\nLa URL de producción que hay que pegar en la web del contrato (variable `N8N_WEBHOOK_URL` del servicio) es:\n`https://n8n.completitud.online/webhook/contrato-aceptado`\n\nEl nodo «Enviar el PDF por WhatsApp» y «Aviso interno por Telegram» vienen desactivados a propósito: actívalos si los quieres.",
+        "height": 460,
+        "width": 420,
+        "color": 4
+      },
+      "id": "nota-principal",
+      "name": "Nota - como funciona",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contrato-aceptado",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-contrato",
+      "name": "Webhook contrato aceptado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        380
+      ],
+      "webhookId": "contrato-aceptado"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepara los datos que envía la web del contrato y redacta el mensaje de WhatsApp\nconst entrada = $input.first().json;\nconst p = entrada.body || entrada;\n\n// Teléfono: si viene sin prefijo internacional se le añade el 34\nconst digitos = String(p.telefono || '').replace(/[^0-9]/g, '');\nconst numero = digitos.length === 9 ? '34' + digitos : digitos;\n\nconst nombre = String(p.aceptante || p.empresa || '').trim() || 'cliente';\n\nconst texto = [\n  'Hola ' + nombre + ':',\n  '',\n  'Hemos recibido tu contrato de arrendamiento de maquinaria nº ' + (p.numero_contrato || '') + ', con los datos que nos facilitaste en la web.',\n  '',\n  'Te lo enviamos también por correo a ' + (p.email || '') + '. Puedes descargarlo aquí:',\n  p.pdf || '',\n  '',\n  'Imprímelo, fírmalo y devuélvenoslo respondiendo al correo o subiéndolo desde ese mismo enlace.',\n  'Si necesitas cualquier cosa, respóndenos por aquí.',\n  '',\n  'Un saludo,',\n  'Adara Excavaciones'\n].join('\\n');\n\nreturn [{\n  json: {\n    numero: numero,\n    texto: texto,\n    tiene_telefono: numero.length >= 11,\n    id: p.id || '',\n    numero_contrato: p.numero_contrato || '',\n    empresa: p.empresa || '',\n    aceptante: p.aceptante || '',\n    email: p.email || '',\n    telefono: p.telefono || '',\n    pdf: p.pdf || ''\n  }\n}];"
+      },
+      "id": "preparar-datos",
+      "name": "Preparar datos y mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "tel-1",
+              "leftValue": "={{ $json.tiene_telefono }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-telefono",
+      "name": "¿Tenemos teléfono?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        340,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_URL }}/message/sendText/Respuesta_Whatsapp_34643175166",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.EVOLUTION_APIKEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.numero, text: $json.texto }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "whatsapp-texto",
+      "name": "WhatsApp: aviso al cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        240
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.pdf }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "descargar-pdf",
+      "name": "Descargar el contrato en PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        380
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('Preparar datos y mensaje').first().json.email }}",
+        "subject": "={{ 'Contrato de arrendamiento de maquinaria nº ' + $('Preparar datos y mensaje').first().json.numero_contrato }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#111\">\n  <p>Hola {{ $('Preparar datos y mensaje').first().json.aceptante }}:</p>\n  <p>Adjuntamos el <strong>contrato de arrendamiento de maquinaria nº {{ $('Preparar datos y mensaje').first().json.numero_contrato }}</strong>, cumplimentado con los datos que nos facilitaste y con el contenido que has aceptado.</p>\n  <p>Imprímelo, fírmalo y devuélvenoslo respondiendo a este correo, o súbelo desde este enlace:<br>\n  <a href=\"{{ $('Preparar datos y mensaje').first().json.pdf }}\">Subir el contrato firmado</a></p>\n  <p>Cualquier duda, respóndenos a este mismo correo.</p>\n  <p>Un saludo,<br><strong>Adara Excavaciones</strong></p>\n</div>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      },
+      "id": "email-contrato",
+      "name": "Enviar el contrato por email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        340
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qxt8FxbBadrOHZZO",
+          "name": "Gmail account - franciscocultooutlook"
+        }
+      },
+      "notes": "El correo sale desde la cuenta de Gmail conectada. Hay que reconectar la credencial en n8n (Credenciales) porque el permiso esta caducado."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_URL }}/message/sendMedia/Respuesta_Whatsapp_34643175166",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.EVOLUTION_APIKEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Preparar datos y mensaje').first().json.numero, mediatype: 'document', mimetype: 'application/pdf', fileName: 'contrato-' + $('Preparar datos y mensaje').first().json.numero_contrato + '.pdf', media: $('Preparar datos y mensaje').first().json.pdf, caption: 'Contrato de arrendamiento nº ' + $('Preparar datos y mensaje').first().json.numero_contrato }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "whatsapp-documento",
+      "name": "Enviar el PDF por WhatsApp (opcional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        540
+      ],
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $env.TELEGRAM_CHAT_ID, text: 'Adara contratos\\nContrato aceptado nº ' + $('Preparar datos y mensaje').first().json.numero_contrato + '\\nCliente: ' + $('Preparar datos y mensaje').first().json.empresa + '\\nEmail: ' + $('Preparar datos y mensaje').first().json.email }) }}",
+        "options": {}
+      },
+      "id": "aviso-telegram",
+      "name": "Aviso interno por Telegram (opcional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        340
+      ],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Webhook contrato aceptado": {
+      "main": [
+        [
+          {
+            "node": "Preparar datos y mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar datos y mensaje": {
+      "main": [
+        [
+          {
+            "node": "¿Tenemos teléfono?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Tenemos teléfono?": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: aviso al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descargar el contrato en PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: aviso al cliente": {
+      "main": [
+        [
+          {
+            "node": "Descargar el contrato en PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar el contrato en PDF": {
+      "main": [
+        [
+          {
+            "node": "Enviar el contrato por email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar el PDF por WhatsApp (opcional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar el contrato por email": {
+      "main": [
+        [
+          {
+            "node": "Aviso interno por Telegram (opcional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true,
+  "pinData": {},
+  "id": "ContrAceptJb4Jsn",
+  "versionId": ""
+}
