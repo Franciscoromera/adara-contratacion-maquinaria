@@ -117,7 +117,7 @@
     },
     {
       "parameters": {
-        "url": "={{ $json.pdf }}",
+        "url": "={{ $('Preparar datos y mensaje').first().json.pdf }}",
         "options": {
           "response": {
             "response": {
