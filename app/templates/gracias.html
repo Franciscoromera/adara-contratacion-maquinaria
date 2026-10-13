@@ -36,8 +36,12 @@
   tu ejemplar personalizado.</p>
 
   {% if email_ok %}
-  <p>Te hemos enviado el contrato en PDF a <strong>{{ solicitud.email }}</strong>.
+  <p>Hemos enviado el contrato en PDF a <strong>{{ solicitud.email }}</strong>. ¿Es correcto?
   Revisa también la carpeta de spam si no lo ves en unos minutos.</p>
+  <p class="ojo">Si te has equivocado al escribir el correo, no pasa nada: escríbenos
+  {% if cfg.email_contacto %}a {{ cfg.email_contacto }}{% endif %}{% if cfg.telefono_contacto %}
+  o llámanos al {{ cfg.telefono_contacto }}{% endif %} y te lo reenviamos a la dirección correcta.
+  También puedes descargar el contrato con el botón de abajo.</p>
   {% else %}
   <p class="ojo">No hemos podido enviar el correo automáticamente{% if email_error %} ({{ email_error }}){% endif %}.
   Puedes descargar el contrato con el botón de abajo y enviárnoslo igualmente.</p>

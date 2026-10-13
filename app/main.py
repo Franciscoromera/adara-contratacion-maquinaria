@@ -21,7 +21,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from . import contrato, correo, db
+from . import contrato, contrato_corto, correo, db
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -225,6 +225,8 @@ async def solicitar(request: Request):
     datos = {k: v.strip() for k, v in formulario_datos.items() if isinstance(v, str)}
 
     faltan = _faltan(datos)
+    if not faltan and datos.get("arr_email", "").lower() != datos.get("arr_email2", "").lower():
+        faltan = ["Los dos correos electrónicos no coinciden"]
     if faltan:
         return plantilla(
             request,
@@ -239,11 +241,14 @@ async def solicitar(request: Request):
         )
 
     conf = cfg()
+    completo = datos.get("formato") == "completo"
+    version = contrato.VERSION_CONTRATO if completo else contrato_corto.VERSION_CONTRATO_CORTO
+    generar_pdf = contrato.generar_pdf if completo else contrato_corto.generar_pdf
     ident = db.crear_solicitud(
         datos,
         ip=(request.client.host if request.client else ""),
         user_agent=request.headers.get("user-agent", ""),
-        version=contrato.VERSION_CONTRATO,
+        version=version,
     )
     solicitud = db.obtener(ident) or {}
     solicitud["aceptante"] = datos.get("firma_nombre", "")
@@ -251,7 +256,7 @@ async def solicitar(request: Request):
     solicitud["fecha_texto"] = datetime.now().strftime("%d/%m/%Y")
     solicitud["web"] = url_base(request)
 
-    pdf, sha, _html = contrato.generar_pdf(datos, conf, solicitud)
+    pdf, sha, _html = generar_pdf(datos, conf, solicitud)
     solicitud["pdf_sha256"] = sha
     db.guardar_pdf(ident, pdf, sha)
 
@@ -267,7 +272,7 @@ async def solicitar(request: Request):
             "cfg": conf,
             "solicitud": solicitud,
             "t": token(ident),
-            "email_ok": ok,
+            "email_ok": ok or (not correo.configurado() and bool(os.getenv("N8N_WEBHOOK_URL"))),
             "email_error": error,
         },
     )
