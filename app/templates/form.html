@@ -117,7 +117,12 @@
       <div class="ancho">
         <label>Correo electrónico <span class="req">*</span></label>
         <input type="email" name="arr_email" value="{{ datos.get('arr_email','') }}" required>
-        <div class="ayuda">Aquí recibirás el contrato en PDF.</div>
+        <div class="ayuda">Aquí recibirás el contrato en PDF. Compruébalo bien antes de enviar.</div>
+      </div>
+      <div class="ancho">
+        <label>Repite el correo electrónico <span class="req">*</span></label>
+        <input type="email" name="arr_email2" value="{{ datos.get('arr_email2','') }}" autocomplete="off" onpaste="return false" required>
+        <div class="ayuda" id="aviso-correo"></div>
       </div>
     </div>
 
@@ -345,6 +350,15 @@
     }
     f.addEventListener('change', ajustar);
     ajustar();
+    var c1 = f.querySelector('input[name=arr_email]'), c2 = f.querySelector('input[name=arr_email2]');
+    var aviso = document.getElementById('aviso-correo');
+    function comprobarCorreo() {
+      var igual = c1.value.trim().toLowerCase() === c2.value.trim().toLowerCase();
+      c2.setCustomValidity(igual ? '' : 'Los dos correos no coinciden');
+      aviso.textContent = (c2.value && !igual) ? 'Los dos correos no coinciden.' : '';
+    }
+    c1.addEventListener('input', comprobarCorreo);
+    c2.addEventListener('input', comprobarCorreo);
   })();
 </script>
 </main>

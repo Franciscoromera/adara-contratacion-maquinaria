@@ -225,6 +225,8 @@ async def solicitar(request: Request):
     datos = {k: v.strip() for k, v in formulario_datos.items() if isinstance(v, str)}
 
     faltan = _faltan(datos)
+    if not faltan and datos.get("arr_email", "").lower() != datos.get("arr_email2", "").lower():
+        faltan = ["Los dos correos electrónicos no coinciden"]
     if faltan:
         return plantilla(
             request,
@@ -270,7 +272,7 @@ async def solicitar(request: Request):
             "cfg": conf,
             "solicitud": solicitud,
             "t": token(ident),
-            "email_ok": ok,
+            "email_ok": ok or (not correo.configurado() and bool(os.getenv("N8N_WEBHOOK_URL"))),
             "email_error": error,
         },
     )
