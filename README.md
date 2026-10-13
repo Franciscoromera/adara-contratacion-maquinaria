@@ -92,6 +92,19 @@ Carga enviada al webhook:
 }
 ```
 
+## Dos versiones del contrato
+
+El formulario deja elegir al cliente (sección 8) entre:
+
+| Formato | Qué genera | Módulo |
+|---|---|---|
+| **Resumido** (por defecto) | 2 páginas de contrato + 1 de albarán de entrega y devolución | `app/contrato_corto.py` |
+| **Completo** | El contrato íntegro con anexos (unas 23 páginas) | `app/contrato.py` |
+
+La versión aceptada queda registrada en la hoja de aceptación y en el panel (`1.0-resumido-octubre-2026`
+o `1.0-octubre-2026`). La jurisdicción del resumido sale de la variable `JUZGADOS` (si está vacía, queda una línea
+para rellenar a mano). Las condiciones del resumido deben revisarse con un abogado o gestor antes de usarlas con clientes.
+
 ## Despliegue en EasyPanel (VPS)
 
 1. Crear un servicio nuevo en el mismo proyecto (`evolution-api`), por ejemplo

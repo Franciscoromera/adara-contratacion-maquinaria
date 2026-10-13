@@ -38,6 +38,13 @@
                        font-weight:400; color:#16202a; margin:0 0 12px; }
   .bloque-aceptacion input[type=checkbox] { margin-top:3px; width:18px; height:18px; flex:none; }
   .bloque-aceptacion a { color:var(--azul); font-weight:600; }
+  fieldset.formato { border:1px solid var(--borde); border-radius:8px; padding:10px 14px; margin:0 0 14px; }
+  fieldset.formato legend { font-weight:600; font-size:.9rem; padding:0 6px; }
+  .opcion { display:flex; gap:10px; align-items:flex-start; font-size:.9rem; margin:6px 0; }
+  .opcion input { margin-top:3px; }
+  .txt-completo { display:none; }
+  .completo .txt-completo { display:inline; }
+  .completo .txt-resumido { display:none; }
   button.enviar { margin-top:22px; width:100%; background:var(--azul); color:#fff; border:0;
                   padding:14px 18px; font-size:1rem; font-weight:600; border-radius:8px; cursor:pointer; }
   button.enviar:hover { background:#153f64; }
@@ -280,6 +287,13 @@
     </details>
 
     <h2 class="seccion">8. Aceptación del contrato</h2>
+    <fieldset class="formato">
+      <legend>¿Qué versión del contrato prefieres?</legend>
+      <label class="opcion"><input type="radio" name="formato" value="resumido" {{ '' if datos.get('formato')=='completo' else 'checked' }}>
+        <span><strong>Resumido</strong>: 2 páginas de condiciones esenciales y un albarán de entrega y devolución.</span></label>
+      <label class="opcion"><input type="radio" name="formato" value="completo" {{ 'checked' if datos.get('formato')=='completo' else '' }}>
+        <span><strong>Completo</strong>: contrato íntegro con todas las cláusulas y anexos (unas 23 páginas).</span></label>
+    </fieldset>
     <div class="rejilla">
       <div>
         <label>Nombre de quien acepta y firma <span class="req">*</span></label>
@@ -295,10 +309,13 @@
       <label class="casilla">
         <input type="checkbox" name="acepta" value="si" {{ 'checked' if datos.get('acepta')=='si' else '' }}>
         <span>He leído y <strong>acepto el contrato de arrendamiento de maquinaria</strong>
-        (condiciones generales, condiciones particulares y anexos, con el régimen de responsabilidad por uso
-        indebido, abusos e impagos). Puedes consultarlo completo aquí:
-        <a href="{{ cfg.contrato_url }}" target="_blank" rel="noopener noreferrer">ver el contrato</a>.
-        Declaro tener capacidad para contratar en nombre de la empresa indicada. <span class="req">*</span></span>
+        <span class="txt-resumido">en su versión resumida (condiciones esenciales, condiciones particulares y albarán).
+        Si lo prefieres, puedes consultar antes
+        <a href="{{ cfg.contrato_url }}" target="_blank" rel="noopener noreferrer">el contrato completo</a>.</span>
+        <span class="txt-completo">(condiciones generales, condiciones particulares y anexos, con el régimen de
+        responsabilidad por uso indebido, abusos e impagos). Puedes consultarlo completo aquí:
+        <a href="{{ cfg.contrato_url }}" target="_blank" rel="noopener noreferrer">ver el contrato</a>.</span>
+        Declaro tener capacidad para contratar en nombre de la empresa indicada. <span class="req">*</span></span></span>
       </label>
       <label class="casilla">
         <input type="checkbox" name="acepta_datos" value="si" {{ 'checked' if datos.get('acepta_datos')=='si' else '' }}>
@@ -319,6 +336,17 @@
       el enlace que incluimos.
     </div>
   </form>
+<script>
+  (function () {
+    var f = document.querySelector('form');
+    function ajustar() {
+      var r = f.querySelector('input[name=formato]:checked');
+      f.classList.toggle('completo', !!r && r.value === 'completo');
+    }
+    f.addEventListener('change', ajustar);
+    ajustar();
+  })();
+</script>
 </main>
 
 <div class="pie">{{ cfg.empresa }}{% if cfg.telefono_contacto %} · {{ cfg.telefono_contacto }}{% endif %}</div>
